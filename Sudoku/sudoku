@@ -1,0 +1,91 @@
+public class Sudoku {
+    public static void main(String[] args) {
+        int n[][][][] = {
+            {{{5, 3, 4}, {6, 7, 2}, {1, 9, 8}},//0.0
+            {{6, 7, 8}, {1, 9, 5}, {3, 4, 2}},//0.1
+            {{9, 1, 2}, {3, 4, 8}, {5, 6, 7}}},//0.2
+            
+            {{{8, 5, 9}, {4, 2, 6}, {7, 1, 3}},//1.0
+            {{7, 6, 1}, {8, 5, 3}, {9, 2, 4}},//1.1
+            {{4, 2, 3}, {7, 9, 1}, {8, 5, 6}}},//1.2
+            
+            {{{9, 6, 1}, {2, 8, 7}, {3, 4, 5}},//2.0
+            {{5, 3, 7}, {4, 1, 9}, {2, 8, 6}},//2.1
+            {{2, 8, 4}, {6, 3, 5}, {1, 7, 9}}},//2.2
+        } ;
+        System.out.println(n[1][2][1][1]) ;
+         
+        for(int i=0 ; i<n.length ; i++ ) { //ลูปทุกลูป
+            for(int j=0 ; j<n[i].length ; j++ ) {
+                System.out.println("Block[" + i + "][" + j + "]:");
+                separateBlock(n,i,j) ;
+                System.out.println();
+            }
+        }
+        System.out.println( "check rows:" ); //ตรวจสอบแถว
+        checkRows(n) ;
+        System.out.println();
+        
+        System.out.println( "check cols:" ); //ตรวจคอลัมน์
+        checkCols(n) ;
+        System.out.println();
+    }
+    static void separateBlock(int n[][][][], int r_block, int c_block) { //แสดงเลขในบล็อคและเช็คซ้ำ
+       String st = ""; //รวมเลขเป็นสตริง
+       for( int i = 0 ; i < n[r_block][c_block].length ; i++ ) {
+            for( int j = 0 ; j < n[r_block][c_block][0].length; j++ ) {
+                System.out.print(n[r_block][c_block][i][j] + " " );
+                st =st+n[r_block][c_block][i][j] ;
+            }
+            System.out.println();
+    }
+    System.out.println(checkSudoku(st)); //เช็คเลขซ้ำผ่านchecksudoku
+}
+static boolean checkSudoku(String st) { //ตรวจสอบเลขซ้ำ
+    String ch, sequence ;
+    boolean win = true ;
+    for( int i = 0 ; i < st.length()-1 ; i++ ){
+        ch = st.substring(i, i+1) ;
+        sequence = st.substring(i+1) ;
+        if(sequence.contains(ch)) {
+            win = false ;
+            break ;
+        }
+    }
+    return win ;
+}
+static void checkRows( int n[][][][]) { //ตรวจแถวใน sudoku
+    for( int r = 0 ; r < 9 ; r++ ) { //ลูปตรวจแถวที่ 0-8
+    String st = "" ;
+    int blockRow = r / 3 ; //หาว่าแถวนั้นอยู่ใน block row ไหน
+    int subRow = r % 3 ; //หาว่าเป็นแถวที่เท่าไรใน block นั้น
+    
+    for( int blockCol = 0 ; blockCol < 3 ; blockCol++ ) {
+        for( int j = 0 ; j < 3 ; j++ ) {
+            int val = n[blockRow][blockCol][subRow][j] ; //รวมเลขแต่ละเเถวจากสามบล้อค
+            st += val ;
+            System.out.print( val + " " );
+            
+        }
+    }
+    System.out.println( checkSudoku(st) ); //เช็คซ้ำ
+    } 
+}
+static void checkCols( int n[][][][] ) { //ตรวจคอลัมน์ใน sudoku
+    for( int c = 0 ; c < 9 ; c++ ) {
+        String st = "" ;
+        int blockCol = c / 3 ; //หาว่าคอลัมน์นั้นอยู่บล้อคไหน
+        int subCol = c % 3 ; //หาว่าเป็นคอลัมน์ที่เท่าไหร่ในบล้อค
+        
+        for( int blockRow = 0 ; blockRow < 3 ; blockRow++ ) { //ดึงเลขจากทั้งสามบล้อคแนวตั้ง
+            for( int i = 0 ; i < 3 ; i++ ) { 
+                int val = n[blockRow][blockCol][i][subCol] ; //ตรวจว่าในแต่ละคอลัมน์ไม่มีเลขซ้ำ
+                st += val ;
+                System.out.print(val + " " );
+            }
+        }
+        System.out.println( checkSudoku(st));
+    }
+}
+}
+ 
