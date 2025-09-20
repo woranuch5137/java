@@ -1,0 +1,154 @@
+import java.util.Scanner;
+
+class StackChar {
+    char[] data;  //เก็บค่าที่ถูก push เข้า stack
+    int top;  //ตำแหน่งบนสุดของ stack
+
+    StackChar(int size) {
+        data = new char[size];
+        top = -1;  //เริ่มต้น = -1 หมายถึง stack ว่าง
+    }
+    void push(char c) {   //เพิ่มตัวอักษร c เข้า stack
+        if (top < data.length - 1) {  //ตรวจสอบว่า stack ยังไม่เต็ม
+            data[++top] = c;   //ถ้าไม่เต็มเพิ่ม top ทีละ 1 แล้วเก็บค่า c ที่ data[top]
+        } else {
+            System.out.println("Stack Full!");  //เต็ม
+        }
+    }
+    char pop() {  //อาค่าบนสุดของ stack ออก
+         if (!isEmpty()) {   //เช็คว่า stack ไม่ว่าง
+            return data[top--];   //ไม่ว่างคืนค่า data[top] แล้วลด top--
+        }
+        return '\0'; // ถ้า stack ว่าง return ค่าว่าง
+    }
+    char peek() {   //ดูค่าบนสุดของ stack โดย ไม่เอาออก
+        if (!isEmpty()) {   ////เช็คว่า stack ไม่ว่าง
+            return data[top];  //ไม่ว่างคืนค่า data[top]
+        }
+        return '\0';   //ว่างคืนค่า '\0'
+    } 
+    boolean isEmpty() { //ตรวจสอบว่า stack ว่างหรือไม่
+        return top == -1;  //ว่างคืนค่า-1,true
+    }
+    String toStringStack() {   //แปลง stack เป็น String เพื่อแสดงผล
+        if (isEmpty()) return "Empty";  //ถ้า stack ว่างคืนค่า "Empty"
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i <= top; i++) {  //ถ้าไม่ว่างวนลูปจาก 0 ถึง top
+            sb.append(data[i]).append( " " );  //ต่อเป็น String
+        }
+        return sb.toString().trim();  //คืน String ที่ trim แล้ว (ตัดช่องว่างด้านหน้า/หลัง)
+    }
+}
+
+public class InfixToPostfix {
+
+    static int precedence(char c) {  //รับพารามิเตอร์ c (เป็นตัวอักษร operator เช่น '+', '-', '*', '/', '^')
+        switch (c) {  //ตรวจสอบตัวอักษร c จะเลือก case ที่ตรงกับ c เพื่อกำหนดค่า precedence
+            case '+':
+            case '-':
+                return 1;  //ต่ำสุดในการคำนวณ
+            case '*':
+            case '/':
+                return 2;  //มีความสำคัญมากกว่า +-
+            case '^':
+                return 3;  //มีความสำคัญสูงสุด
+        }
+        return -1;  //ถ้า c ไม่ใช่ operator คืนค่า -1
+    }
+
+    static String toPostfix(String infix) {
+        StackChar stack = new StackChar(infix.length());
+        String postfix = "";
+
+        System.out.printf("%-15s%-15s%-15s\n", "Infix String", "Stack", "Postfix");
+        System.out.println("---------------------------------------------");
+
+        for (int i = 0; i < infix.length(); i++) {  //วนลูปทีละตัวอักษร ของ infix
+            char c = infix.charAt(i);  //c = ตัวอักษรปัจจุบัน
+
+            if (Character.isLetterOrDigit(c)) {  //ถ้า c เป็นตัวอักษรหรือตัวเลข(operand) ใส่ลง postfix
+                postfix += c;  //ใส่ลง Postfix
+            } else if (c == '(') {  //ถ้าเจอ ( push ลง stack
+                stack.push(c);  //ใช้สำหรับเก็บวงเล็บเพื่อรอเจอ )
+            } else if (c == ')') {  //ถ้าเจอ ) pop operator จาก stack ลง postfix จนเจอ (
+                while (!stack.isEmpty() && stack.peek() != '(') {
+                    postfix += stack.pop();  //pop ( ออก แต่ไม่ใส่ลง postfix
+                }
+                if (!stack.isEmpty()) stack.pop();  //pop ( ออก แต่ไม่ใส่ลง postfix
+            } else { 
+                while (!stack.isEmpty() && precedence(c) <= precedence(stack.peek())) {  //pop operator ที่มี precedence สูงกว่าหรือเท่ากับ c ลง postfix
+                    postfix += stack.pop();  //push c ลง stack
+                }
+                stack.push(c);
+            }
+            System.out.printf("%-15s%-15s%-15s\n", c, stack.toStringStack(), postfix);  //แสดง status ปัจจุบันของตัวอักษร, stack, postfix
+        }
+        while (!stack.isEmpty()) {
+            postfix += stack.pop();  //หลังลูปเสร็จpop operator ที่เหลือใน stack ลง postfix
+            System.out.printf("%-15s%-15s%-15s\n", "", stack.toStringStack(), postfix);  //แสดง status ของ stack และ postfix ตอน pop แต่ละตัว
+        }
+        return postfix;  //คืนค่า Postfix expression ที่ได้
+    }
+
+    static double evaluatePostfix(String postfix, double[] values) { //รับพารามิเตอร์
+        double[] stack = new double[postfix.length()];  //ขนาด stack = ความยาว postfix
+        int top = -1;  //stack ว่าง
+
+        for (int i = 0; i < postfix.length(); i++) {  //วนลูปทีละตัวอักษร ของ postfix
+            char c = postfix.charAt(i);  //c = ตัวอักษรปัจจุบัน
+
+            if (Character.isLetter(c)) {  //ถ้า c เป็น ตัวอักษร (A-Z)
+                int index = Character.toUpperCase(c) - 'A'; // รองรับ a-z
+                stack[++top] = values[index];
+            } else {  //ถ้า c เป็น operator pop ค่าบนสุดสองตัว จาก stack → b, a
+                double b = stack[top--];  //ตัวหลัง
+                double a = stack[top--];  //ตัวก่อนหน้า
+                switch (c) {  //คำนวณค่าตาม operator  push ผลลัพธ์กลับลง stack
+                    case '+': 
+                        stack[++top] = a + b; 
+                        break;
+                    case '-': 
+                        stack[++top] = a - b; 
+                        break;
+                    case '*': 
+                        stack[++top] = a * b; 
+                        break;
+                    case '/': 
+                        stack[++top] = a / b; 
+                        break;
+                    case '^': 
+                        stack[++top] = (int)Math.pow(a, b); 
+                        break;
+                }
+            }
+        }
+        return stack[top];  //ผลลัพธ์สุดท้ายอยู่บน stack[top]
+    } 
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);  //รับค่าจากผู้ใช้
+
+        System.out.print("Enter Infix: ");  //แสดงข้อความ "Enter Infix: "
+        String infix = sc.nextLine().replaceAll("\\s+", "");  //ลบช่องว่าง
+
+        String postfix = toPostfix(infix);  //แปลงสมการ จาก Infix เป็น Postfix
+        System.out.println("\nPostfix: " + postfix);  //แสดงสมการแบบ Postfix
+
+        double[] values = new double[26];  //เก็บ A-Z
+        boolean[] visited = new boolean[26];
+          
+        for (int i = 0; i < infix.length(); i++) {  //ตรวจตัวอักษรในสมการ Infix ทีละตัว
+            char c = infix.charAt(i);  //คืนค่าตัวอักษรตำแหน่ง i
+            if (Character.isLetter(c)) {  //c เป็น ตัวอักษร A-Z หรือ a-z หรือไม่
+                int index = Character.toUpperCase(c) - 'A';
+                if (!visited[index]) {  //แปลงตัวอักษรเป็น ดัชนีอาเรย์ 0–25
+                    System.out.print("Enter value " + c + ": "); //แสดงข้อความให้ผู้ใช้กรอกค่า
+                      values[index] = sc.nextDouble();  //รับค่าจากผู้ใช้ด้วย nextInt()เก็บใน values[c - 'A']
+                      visited[index] = true;
+                }
+            }
+        }
+        double result = evaluatePostfix(postfix, values);  //คำนวณค่าของสมการ Postfix
+        System.out.println("Result: " + result);  //แสดงผลลัพธ์
+    }
+}
